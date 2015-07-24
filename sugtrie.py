@@ -101,8 +101,7 @@ class CharTrie(object):
         if len(partial.nodes) == target_index:
             node = partial.nodes[-1]
             partial.nodes = partial.nodes[:-1]
-            ret = cls.find_completions(partial, node)
-            return ret
+            return cls.find_completions(partial, node)
 
         for node in alternate_nodes:
             alternate = Completion(partial)
