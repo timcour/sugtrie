@@ -21,5 +21,4 @@ if __name__=='__main__':
     for k, v in counts.iteritems():
         probabilities[k] = v / total
 
-    print json.dumps({'counts': dict(counts),
-                      'probabilities': probabilities})
+    print json.dumps(dict(counts))
