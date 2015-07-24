@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
-import sys
 import json
+import sys
 
 from collections import defaultdict
 from pprint import pformat as pf
 
 WORD_COUNTS_JSON_FILEPATH = "big.counts.json"
+#WORD_COUNTS_JSON_FILEPATH = "small.counts.json"
 
 class CharNode(object):
     def __init__(self, c):
@@ -79,7 +80,10 @@ class CharTrie(object):
         for k, v in node.children.iteritems():
             completion = Completion(partial, [node])
             completion.weight *= 0.6
-            completions += cls.find_completions(completion, node.children[k])
+            child = node.children[k]
+            if completion.weight * child.branch_score < 1.0:
+                continue
+            completions += cls.find_completions(completion, child)
 
         return completions
 
