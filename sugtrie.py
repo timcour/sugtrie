@@ -87,13 +87,13 @@ class CharTrie(object):
 class CharTrieBuilder(object):
     verbose = True
     @classmethod
-    def add_word(cls, root, word, weight=1):
+    def add_word(cls, root, word, freq=1):
         curr = root
         for c in word:
             curr = curr.upsert_child_char(c)
-            curr.branch_score += weight
+            curr.branch_score += freq
         curr.word_end = True
-        curr.word_freq = weight
+        curr.word_freq = freq
 
     @classmethod
     def load_words_counts_from_json_file(cls, filepath):
