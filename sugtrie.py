@@ -177,15 +177,20 @@ class CharTrieBuilder(object):
 
 
 if __name__=='__main__':
+    import time
     def process_input(trie):
         print "\nEnter text:",
         w = raw_input()
         if not w:
             return
+        ti = time.time()
         matches = trie.find_prefix_matches(w.lower())
-        print "Found %i suggestions:\n===============" % len(matches)
+        tf = time.time()
+        msg = "Found %i suggestions for '%s' in %3.2fms:" % (
+            len(matches), w.lower(), 1000*(tf-ti))
+        print "%s\n%s" % (msg, '='*len(msg))
         matches = sorted(matches, reverse=True)
-        print '\n'.join(map(str, matches[:60]))
+        print '\n'.join(map(str, matches[:80]))
 
     trie = CharTrieBuilder.load_words_counts_from_json_file(WORD_COUNTS_JSON_FILEPATH)
     while True:
