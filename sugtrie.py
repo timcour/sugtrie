@@ -44,6 +44,9 @@ class Completion(object):
             self.raw_score = completion.raw_score
         if append_nodes:
             self.nodes += append_nodes
+        self.update_score()
+
+    def update_score(self):
         if self.nodes:
             self.raw_score = self.nodes[-1].word_freq
 
@@ -53,6 +56,11 @@ class Completion(object):
 
     def word(self):
         return ''.join([node.c for node in self.nodes])
+    def __repr__(self):
+        word_freq = self.nodes[-1].word_freq if self.nodes else -1
+        return "freq: %6i, weight: %2.2f, score: %6i, word: %s" % (
+            word_freq, self.weight, self.score, self.word())
+
     def __str__(self):
         word_freq = self.nodes[-1].word_freq if self.nodes else -1
         return "freq: %6i, weight: %2.2f, score: %6i, word: %s" % (
@@ -72,9 +80,46 @@ class CharTrie(object):
 
         for k, v in sorted(node.children.iteritems(), key=lambda kv: kv[1].branch_score):
             completion = Completion(partial, [node])
-            completion.weight *= 0.8
+            completion.weight *= 0.6
             completions += cls.find_completions(completion, node.children[k])
+
         return completions
+
+    @classmethod
+    def find_corrections(cls, partial, target_index=0, alternate_nodes=[]):
+        # Partial is guaranteed to have at least one node.
+
+        # Base case is when partial only has the root node (
+        # CharNode('') ).  It should still work in this case as the
+        # root node has a list of children and follows the same rules
+        # as the rest.
+
+        # For each node in partial, we need to recursively find all
+        # possible replacements.  If the branch_score drops below some
+        # threshold, halt recursion down that path.
+
+        corrections = []
+
+        if len(partial.nodes) == target_index:
+            node = partial.nodes[-1]
+            partial.nodes = partial.nodes[:-1]
+            ret = cls.find_completions(partial, node)
+            return ret
+
+        for node in alternate_nodes:
+            alternate = Completion(partial)
+            alternate.nodes[target_index] = node
+            alternate.update_score()
+
+            if alternate.nodes[target_index].c != partial.nodes[target_index].c:
+                alternate.weight *= 0.1
+            if alternate.weight * node.branch_score < 1.0:
+                return corrections
+
+            corrections += cls.find_corrections(alternate, target_index + 1,
+                                                alternate_nodes=node.children.values())
+        return corrections
+
 
     def find_prefix_matches(self, prefix):
         curr = self.root
@@ -85,9 +130,13 @@ class CharTrie(object):
                 return []
             partial.nodes.append(curr)
 
+        corrections = self.__class__.find_corrections(partial, alternate_nodes=[partial.nodes[0]])
+
         node = partial.nodes[-1]
         partial.nodes = partial.nodes[:-1]
-        return self.__class__.find_completions(partial, node)
+        completions = self.__class__.find_completions(partial, node)
+
+        return corrections + completions
 
     def __str__(self):
         return str(self.root)
@@ -98,6 +147,7 @@ class CharTrieBuilder(object):
     @classmethod
     def add_word(cls, root, word, freq=1):
         curr = root
+        curr.branch_score += freq
         for c in word:
             curr = curr.upsert_child_char(c)
             curr.branch_score += freq
@@ -116,6 +166,7 @@ class CharTrieBuilder(object):
                 cls.print_load_progress(i, word)
                 cls.add_word(trie.root, word, count)
         if cls.verbose: print " ...done."
+        print "CharTrie's root branch_score: %i" % trie.root.branch_score
         return trie
 
     @classmethod
