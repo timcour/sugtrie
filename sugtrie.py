@@ -33,7 +33,6 @@ class CharNode(object):
 class CharTrie(object):
     def __init__(self, verbose=False):
         self.root = CharNode('')
-        self.verbose = verbose
 
     @classmethod
     def find_completions(cls, prefix, node):
