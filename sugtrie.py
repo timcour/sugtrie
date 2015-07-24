@@ -112,7 +112,7 @@ class CharTrie(object):
             if alternate.nodes[target_index].c != partial.nodes[target_index].c:
                 alternate.weight *= 0.1
             if alternate.weight * node.branch_score < 1.0:
-                return corrections
+                continue
 
             corrections += cls.find_corrections(alternate, target_index + 1,
                                                 alternate_nodes=node.children.values())
