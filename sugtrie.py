@@ -12,7 +12,7 @@ class CharNode(object):
     def __init__(self, c):
         self.c = c
         self.word_end = False
-        self.word_weight = 0
+        self.word_freq = 0
         self.children = {}
         self.branch_weight = 0
 
@@ -43,13 +43,13 @@ class Completion(object):
         if append_nodes:
             self.nodes += append_nodes
         if self.nodes:
-            self.score = self.nodes[-1].word_weight
+            self.score = self.nodes[-1].word_freq
 
     def word(self):
         return ''.join([node.c for node in self.nodes])
     def __str__(self):
-        word_weight = self.nodes[-1].word_weight if self.nodes else -1
-        return "freq: %6i, score: %6i, word: %s" % (word_weight, self.score, self.word())
+        word_freq = self.nodes[-1].word_freq if self.nodes else -1
+        return "freq: %6i, score: %6i, word: %s" % (word_freq, self.score, self.word())
     def __cmp__(self, completion):
         return self.score - completion.score
 
@@ -93,7 +93,7 @@ class CharTrieBuilder(object):
             curr = curr.upsert_child_char(c)
             curr.branch_weight += weight
         curr.word_end = True
-        curr.word_weight = weight
+        curr.word_freq = weight
 
     @classmethod
     def load_words_counts_from_json_file(cls, filepath):
