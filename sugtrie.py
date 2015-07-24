@@ -58,13 +58,11 @@ class Completion(object):
         return ''.join([node.c for node in self.nodes])
     def __repr__(self):
         word_freq = self.nodes[-1].word_freq if self.nodes else -1
-        return "freq: %6i, weight: %2.2f, score: %6i, word: %s" % (
+        return "freq: %6i, weight: %2.2f, score: %6.1f, word: %s" % (
             word_freq, self.weight, self.score, self.word())
 
     def __str__(self):
-        word_freq = self.nodes[-1].word_freq if self.nodes else -1
-        return "freq: %6i, weight: %2.2f, score: %6i, word: %s" % (
-            word_freq, self.weight, self.score, self.word())
+        return repr(self)
     def __cmp__(self, completion):
         return self.score - completion.score
 
