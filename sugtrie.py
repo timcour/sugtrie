@@ -42,7 +42,8 @@ class CharTrie(object):
         completions = []
         if node.word_end:
             completions.append(prefix + node.c)
-        for k in sorted(node.children.iterkeys()):
+
+        for k, v in sorted(node.children.iteritems(), key=lambda kv: kv[1].branch_weight):
             completions += cls.find_completions(prefix + node.c, node.children[k])
         return completions
 
