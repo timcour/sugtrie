@@ -125,7 +125,7 @@ class CharTrie(object):
         for c in prefix:
             curr = curr.children.get(c)
             if not curr:
-                return []
+                curr = CharNode(c)
             partial.nodes.append(curr)
 
         corrections = self.__class__.find_corrections(partial, alternate_nodes=[partial.nodes[0]])
