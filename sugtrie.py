@@ -36,20 +36,27 @@ class CharNode(object):
 class Completion(object):
     def __init__(self, completion=None, append_nodes=None):
         self.nodes = []
-        self.score = 0
+        self.weight = 1.0
+        self.raw_score = 0
         if completion:
             self.nodes += completion.nodes
-            self.score = completion.score
+            self.weight = completion.weight
+            self.raw_score = completion.raw_score
         if append_nodes:
             self.nodes += append_nodes
         if self.nodes:
-            self.score = self.nodes[-1].word_freq
+            self.raw_score = self.nodes[-1].word_freq
+
+    @property
+    def score(self):
+        return self.raw_score * self.weight
 
     def word(self):
         return ''.join([node.c for node in self.nodes])
     def __str__(self):
         word_freq = self.nodes[-1].word_freq if self.nodes else -1
-        return "freq: %6i, score: %6i, word: %s" % (word_freq, self.score, self.word())
+        return "freq: %6i, weight: %2.2f, score: %6i, word: %s" % (
+            word_freq, self.weight, self.score, self.word())
     def __cmp__(self, completion):
         return self.score - completion.score
 
@@ -64,7 +71,9 @@ class CharTrie(object):
             completions.append(Completion(completion=partial, append_nodes=[node]))
 
         for k, v in sorted(node.children.iteritems(), key=lambda kv: kv[1].branch_score):
-            completions += cls.find_completions(Completion(partial, [node]), node.children[k])
+            completion = Completion(partial, [node])
+            completion.weight *= 0.8
+            completions += cls.find_completions(completion, node.children[k])
         return completions
 
     def find_prefix_matches(self, prefix):
