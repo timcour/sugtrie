@@ -1,17 +1,20 @@
 #!/usr/bin/env python
 
 import sys
+import json
 
 from collections import defaultdict
 from pprint import pformat as pf
 
-DICTIONARY_PATH = "dictionary.txt"
+WORD_COUNTS_JSON_FILEPATH = "big.counts.json"
 
 class CharNode(object):
     def __init__(self, c):
         self.c = c
         self.word_end = False
+        self.word_weight = 0
         self.children = {}
+        self.branch_weight = 0
 
     def upsert_child_char(self, c):
         if c not in self.children:
@@ -58,23 +61,25 @@ class CharTrie(object):
 class CharTrieBuilder(object):
     verbose = True
     @classmethod
-    def add_word(cls, root, word):
+    def add_word(cls, root, word, weight=1):
         curr = root
         for c in word:
             curr = curr.upsert_child_char(c)
+            curr.branch_weight += weight
         curr.word_end = True
+        curr.word_weight = weight
 
     @classmethod
-    def load_words_from_file(cls, filepath):
+    def load_words_counts_from_json_file(cls, filepath):
         trie = CharTrie()
         if cls.verbose: print "Loading words from %s" % filepath
         with open(filepath) as f:
-            count = 0
-            for line in f:
-                count += 1
-                word = line.strip()
-                cls.print_load_progress(count, word)
-                cls.add_word(trie.root, word)
+            counts = json.loads(f.read())
+            i = 0
+            for word, count in counts.iteritems():
+                i += 1
+                cls.print_load_progress(i, word)
+                cls.add_word(trie.root, word, count)
         if cls.verbose: print " ...done."
         return trie
 
@@ -97,6 +102,6 @@ if __name__=='__main__':
         print "Found %i suggestions:\n===============" % len(matches)
         print '\n'.join(matches[:50])
 
-    trie = CharTrieBuilder.load_words_from_file(DICTIONARY_PATH)
+    trie = CharTrieBuilder.load_words_counts_from_json_file(WORD_COUNTS_JSON_FILEPATH)
     while True:
         process_input(trie)
