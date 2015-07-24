@@ -14,7 +14,7 @@ class CharNode(object):
         self.word_end = False
         self.word_freq = 0
         self.children = {}
-        self.branch_weight = 0
+        self.branch_score = 0
 
     def upsert_child_char(self, c):
         if c not in self.children:
@@ -63,7 +63,7 @@ class CharTrie(object):
         if node.word_end:
             completions.append(Completion(completion=partial, append_nodes=[node]))
 
-        for k, v in sorted(node.children.iteritems(), key=lambda kv: kv[1].branch_weight):
+        for k, v in sorted(node.children.iteritems(), key=lambda kv: kv[1].branch_score):
             completions += cls.find_completions(Completion(partial, [node]), node.children[k])
         return completions
 
@@ -91,7 +91,7 @@ class CharTrieBuilder(object):
         curr = root
         for c in word:
             curr = curr.upsert_child_char(c)
-            curr.branch_weight += weight
+            curr.branch_score += weight
         curr.word_end = True
         curr.word_freq = weight
 
