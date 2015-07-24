@@ -33,27 +33,53 @@ class CharNode(object):
         return pf(self.to_dict())
 
 
+class Completion(object):
+    def __init__(self, completion=None, append_nodes=None):
+        self.nodes = []
+        self.score = 0
+        if completion:
+            self.nodes += completion.nodes
+            self.score = completion.score
+        if append_nodes:
+            self.nodes += append_nodes
+        if self.nodes:
+            self.score = self.nodes[-1].word_weight
+
+    def word(self):
+        return ''.join([node.c for node in self.nodes])
+    def __str__(self):
+        word_weight = self.nodes[-1].word_weight if self.nodes else -1
+        return "freq: %6i, score: %6i, word: %s" % (word_weight, self.score, self.word())
+    def __cmp__(self, completion):
+        return self.score - completion.score
+
 class CharTrie(object):
     def __init__(self, verbose=False):
         self.root = CharNode('')
 
     @classmethod
-    def find_completions(cls, prefix, node):
+    def find_completions(cls, partial, node):
         completions = []
         if node.word_end:
-            completions.append(prefix + node.c)
+            completions.append(Completion(completion=partial, append_nodes=[node]))
 
         for k, v in sorted(node.children.iteritems(), key=lambda kv: kv[1].branch_weight):
-            completions += cls.find_completions(prefix + node.c, node.children[k])
+            completions += cls.find_completions(Completion(partial, [node]), node.children[k])
         return completions
 
     def find_prefix_matches(self, prefix):
         curr = self.root
+        partial = Completion(append_nodes=[curr])
         for c in prefix:
             curr = curr.children.get(c)
             if not curr:
                 return []
-        return self.__class__.find_completions(prefix[:-1], curr)
+            partial.nodes.append(curr)
+
+        #return self.__class__.find_completions(prefix[:-1], curr)
+        node = partial.nodes[-1]
+        partial.nodes = partial.nodes[:-1]
+        return self.__class__.find_completions(partial, node)
 
     def __str__(self):
         return str(self.root)
@@ -101,7 +127,8 @@ if __name__=='__main__':
             return
         matches = trie.find_prefix_matches(w.lower())
         print "Found %i suggestions:\n===============" % len(matches)
-        print '\n'.join(matches[:50])
+        matches = sorted(matches, reverse=True)
+        print '\n'.join(map(str, matches[:60]))
 
     trie = CharTrieBuilder.load_words_counts_from_json_file(WORD_COUNTS_JSON_FILEPATH)
     while True:
