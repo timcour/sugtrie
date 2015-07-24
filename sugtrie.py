@@ -64,7 +64,7 @@ class Completion(object):
     def __str__(self):
         return repr(self)
     def __cmp__(self, completion):
-        return self.score - completion.score
+        return cmp(self.score, completion.score)
 
 class CharTrie(object):
     def __init__(self, verbose=False):
