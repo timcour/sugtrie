@@ -29,40 +29,11 @@ class CharNode(object):
     def __str__(self):
         return pf(self.to_dict())
 
+
 class CharTrie(object):
-    def __init__(self, word_filepath, verbose=False):
+    def __init__(self, verbose=False):
         self.root = CharNode('')
         self.verbose = verbose
-        if word_filepath:
-            self.load_words_from_file(word_filepath)
-
-    def print_load_progress(self, i, word):
-        if not self.verbose:
-            return
-        rpadding = ' '*(30 - len(word))
-        sys.stdout.write("\r%8i: %s%s" % (i, word, rpadding))
-        sys.stdout.flush()
-
-
-    def add(self, word):
-        curr = self.root
-        for c in word:
-            curr = curr.upsert_child_char(c)
-        curr.word_end = True
-
-    def load_words_from_file(self, filepath):
-        if self.verbose:
-            print "Loading words from %s" % filepath
-        with open(filepath) as f:
-            count = 0
-            for line in f:
-                count += 1
-                word = line.strip()
-                self.print_load_progress(count, word)
-                self.add(word)
-
-        if self.verbose:
-            print " ...done."
 
     @classmethod
     def find_completions(cls, prefix, node):
@@ -84,10 +55,41 @@ class CharTrie(object):
     def __str__(self):
         return str(self.root)
 
-if __name__=='__main__':
-    trie = CharTrie(DICTIONARY_PATH, verbose=True)
 
-    def process_input():
+class CharTrieBuilder(object):
+    verbose = True
+    @classmethod
+    def add_word(cls, root, word):
+        curr = root
+        for c in word:
+            curr = curr.upsert_child_char(c)
+        curr.word_end = True
+
+    @classmethod
+    def load_words_from_file(cls, filepath):
+        trie = CharTrie()
+        if cls.verbose: print "Loading words from %s" % filepath
+        with open(filepath) as f:
+            count = 0
+            for line in f:
+                count += 1
+                word = line.strip()
+                cls.print_load_progress(count, word)
+                cls.add_word(trie.root, word)
+        if cls.verbose: print " ...done."
+        return trie
+
+    @classmethod
+    def print_load_progress(cls, i, word):
+        if not cls.verbose:
+            return
+        rpadding = ' '*(30 - len(word))
+        sys.stdout.write("\r%8i: %s%s" % (i, word, rpadding))
+        sys.stdout.flush()
+
+
+if __name__=='__main__':
+    def process_input(trie):
         print "\nEnter text:",
         w = raw_input()
         if not w:
@@ -96,5 +98,6 @@ if __name__=='__main__':
         print "Found %i suggestions:\n===============" % len(matches)
         print '\n'.join(matches[:50])
 
+    trie = CharTrieBuilder.load_words_from_file(DICTIONARY_PATH)
     while True:
-        process_input()
+        process_input(trie)
