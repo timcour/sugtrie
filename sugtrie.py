@@ -134,7 +134,7 @@ class CharTrie(object):
         partial.nodes = partial.nodes[:-1]
         completions = self.__class__.find_completions(partial, node)
 
-        return corrections + completions
+        return filter(lambda c: c.score > 1.0, corrections + completions)
 
     def __str__(self):
         return str(self.root)
