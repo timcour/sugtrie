@@ -29,7 +29,7 @@ class CharNode(object):
     def __str__(self):
         return pf(self.to_dict())
 
-class CharTri(object):
+class CharTrie(object):
     def __init__(self, word_filepath, verbose=False):
         self.root = CharNode('')
         self.verbose = verbose
@@ -85,14 +85,14 @@ class CharTri(object):
         return str(self.root)
 
 if __name__=='__main__':
-    tri = CharTri(DICTIONARY_PATH, verbose=True)
+    trie = CharTrie(DICTIONARY_PATH, verbose=True)
 
     def process_input():
         print "\nEnter text:",
         w = raw_input()
         if not w:
             return
-        matches = tri.find_prefix_matches(w.lower())
+        matches = trie.find_prefix_matches(w.lower())
         print "Found %i suggestions:\n===============" % len(matches)
         print '\n'.join(matches[:50])
 
