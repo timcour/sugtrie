@@ -76,7 +76,6 @@ class CharTrie(object):
                 return []
             partial.nodes.append(curr)
 
-        #return self.__class__.find_completions(prefix[:-1], curr)
         node = partial.nodes[-1]
         partial.nodes = partial.nodes[:-1]
         return self.__class__.find_completions(partial, node)
